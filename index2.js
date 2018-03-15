@@ -8,7 +8,7 @@ app.use(rendertron.makeMiddleware({
     proxyUrl: CONFIG.render_url,
 }));
 
-let app_path = path.join(__dirname, '/../public/v1/documentation/dist');
+let app_path = path.join(__dirname, '/../webportal/dist');
 console.log('app path: ', app_path);
 
 
