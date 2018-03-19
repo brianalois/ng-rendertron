@@ -1,31 +1,37 @@
+'use strict'
 require('./config/env')
-const functions = require('firebase-functions');
-const express = require('express');
-const fetch = require('node-fetch');
-const app = express();
-const util = require('./helpers/util');
 
-const appUrl = CONFIG.app_url;
+const express         = require('express');
+const app             = express();
+const morgan          = require('morgan');
+const bodyParser      = require('body-parser');
+const methodOverride  = require('method-override'); // simulate DELETE and PUT (express4)
+const router          = express.Router();
+const rendertron      = require('rendertron-middleware');
 
+const dir             = __dirname + CONFIG.app_path;
 
-app.get('*', async (req, res) => {
+console.log('——————————- Run on port '+ CONFIG.port);
+console.log('——————————- Serving directory: ' + dir)
 
-    const isBot = detectBot(req.headers['user-agent']);
+app.use(rendertron.makeMiddleware({
+    proxyUrl: CONFIG.render_url,
+}));
 
-    if(isBot){
-        const botUrl = util.generateUrl(req);
-        let renderRes = await fetch(botUrl);
+/****************************** Router ***************************/
+router.get('*', function(req, res){
+    res.sendFile('index.html', { root: dir });
+});
 
-        let body = await renderRes.text();
+/****************************** /Router ***************************/
 
-        res.set('Cache-Control', 'public, max-age-300, s+maxage-600');
-        res.set('Vary', 'User-Agent');
+// app.use(morgan('dev')); // log every request to the console
+app.use(express.static(dir)); // Static (public) folder
 
-        return res.send(body.toString());
-    }
+app.use(bodyParser.urlencoded({extended:true}));// get information from html forms
+app.use(bodyParser.json());
+app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
+app.use(methodOverride());
+app.use('/', router); // app.use('/parent', router); call all from localhost:port/parent/*
 
-    let data = fetch(`https://${appUrl}`)
-})
-
-export.app = functions.https.onRequest(app);
-//https://www.youtube.com/watch?v=ANyOZIcGvB8
+app.listen(CONFIG.port);

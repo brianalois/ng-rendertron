@@ -11,7 +11,15 @@ app.use(rendertron.makeMiddleware({
 let app_path = path.join(__dirname, CONFIG.app_path);
 console.log('app path: ', app_path);
 
+app.use('/*', express.static(app_path));
 
-app.get('*', express.static(app_path));
+app.get('*', (req, res)=>{
+    console.log('t', app_path)
+    return res.sendFile(app_path);
+});
+
+
+
 
 app.listen(CONFIG.port);
+
